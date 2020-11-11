@@ -51,7 +51,7 @@ module "lambda_glossary" {
   source_path = "files/glossary"
 
   layers = [
-    module.lambda_layer_s3.this_lambda_layer_arn,
+    module.lambda_layer.this_lambda_layer_arn
   ]
 
   environment_variables = {
@@ -60,19 +60,18 @@ module "lambda_glossary" {
 
 }
 
-module "lambda_layer_s3" {
+module "lambda_layer" {
   source = "terraform-aws-modules/lambda/aws"
 
   create_layer = true
 
-  layer_name          = "lambda-pandas-layer-s3"
-  description         = "Pandas lambda layer (deployed from S3)"
+  layer_name          = "lambda-pandas-layer"
+  description         = "Pandas lambda layer (deployed from local)"
   compatible_runtimes = ["python3.7"]
 
   source_path = "files/layer"
 
-  store_on_s3 = true
-  s3_bucket   = module.s3_bucket_pandas_layer.this_s3_bucket_id
+  store_on_s3 = false
 }
 
 ################################################-Lambda-Permissions-##############################################################
@@ -173,7 +172,7 @@ resource "aws_api_gateway_integration" "integration_select" {
   rest_api_id             = aws_api_gateway_rest_api.glossary.id
   resource_id             = aws_api_gateway_resource.glossary_select.id
   http_method             = aws_api_gateway_method.select_get.http_method
-  integration_http_method = "GET"
+  integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = module.lambda_glossary.this_lambda_function_invoke_arn
 }
@@ -182,7 +181,7 @@ resource "aws_api_gateway_integration" "integration_list" {
   rest_api_id             = aws_api_gateway_rest_api.glossary.id
   resource_id             = aws_api_gateway_resource.glossary_list.id
   http_method             = aws_api_gateway_method.list_get.http_method
-  integration_http_method = "GET"
+  integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = module.lambda_glossary.this_lambda_function_invoke_arn
 }
